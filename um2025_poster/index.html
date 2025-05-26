@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Revealing CLASSY TNOs with Deep Learning</title>
+    <link rel="stylesheet" href="poster.css">
+    <meta name="viewport" content="height=device-height, width=device-width, initial-scale=1">
+    <!-- Based on a poster template from https://github.com/cpitclaudel/academic-poster-template -->
+
+          <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+          <link href="https://fonts.googleapis.com/css2?family=Fira+Sans+Condensed:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&amp;family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400;1,700&amp;display=swap" rel="stylesheet">
+    
+    <style type="text/css">
+  html { font-size: 1.15rem }
+</style>
+  </head>
+
+  <body vocab="http://schema.org/" typeof="ScholarlyArticle">
+    <header role="banner">
+      <aside>
+          <a href="https://www.cfht.hawaii.edu/" target="_blank"><img src="CFHTlogo.png" alt="Canada France Hawaii Telescope"></a>
+      </aside>
+      <div>
+        <h1 property="headline">Revealing CLASSY TNOs with Deep Learning</h1>
+          <h2 property="alternativeHeadline">Focusing the search for needles in a hay stack with neural networks</h2>
+            <address>
+              <a property="author">Preeti Cowan<sup>1</sup></a>,
+              <a property="coauthor">Wesley Fraser<sup>2,</sup><sup>3</sup></a>,
+              <a property="coauthor">Samantha Lawler<sup>4</sup></a>,
+              <a property="coauthor">CLASSY Collaboration</a>
+              <br />  
+              <sup>1</sup><a property="sourceOrganization">University of Auckland, New Zealand</a>,
+              <sup>2</sup><a property="sourceOrganization">Herzberg Astronomy and Astrophysics Research Centre, Victoria, Canada</a>,
+              <sup>3</sup><a property="sourceOrganization">University of Victoria, Canada</a>,
+              <sup>4</sup><a property="sourceOrganization">University of Regina, Regina, Canada</a>
+            </address>
+      </div>
+      <aside>
+          <uoa-logo logo-type="vertical" color="inverted" size="small" > </uoa-logo>
+          <a href="https://www.auckland.ac.nz/en.html" target="_blank"><img src="UoA_logo.png" alt="University of Auckland"></a>
+      </aside>
+    </header>
+
+    <main property="articleBody">
+      <article property="abstract">
+        <header><h3>Abstract</h3></header>
+
+        <p>
+          We examine deep learning’s effectiveness for TNO detection in CLASSY (Classical and Large-A Solar SYstem) survey, a CFHT Large Program now in its third year.
+        </p>
+        <p> 
+          In recent years, progress in TNO population science has been driven by large-scale surveys, precipitating in an avalanche of data that has highlighted the need for new tools to successfully unpack the signal from the noise. 
+        </p> 
+        <p> 
+          Here, we create composite images of the nightly CFHT MegaCam observations, leveraging the sky motion of fast TNOs in consecutive observations to extract a linear series of points (‘tracklets’). 
+          These tracklets form the basis of our training dataset of ~75,000 images, which were used to train several custom convolutional neural network (CNN)-based to identify these tracklets in the CLASSY data. 
+        </p>
+        <p>
+          The predictions from each of these networks were then combined to boost the predictive power, achieving a <strong>recall of 98.15%</strong>. This technique is effective for isolating the regions of interest in observations, reducing the load for computing the predicted orbital track and ultimately streamlining the detection pipeline. 
+        </p>
+      </article>
+
+      <article>
+        <header><h3>Data</h3></header>
+        <ul>
+          <li>Data from one night of observations in August 22, October 22, and January 23: total of 3800 exposures</li>
+          <li>289s observations spanning 4 hours; achieving and exceeding a limiting magnitude of 26.5.</li>  
+          <li>Detrending, astrometric, and photometric calibration using MegaPipe[1].</li>   
+          <li>Addition of artificial TNOs ('planted sources') via TRIPPy (TRailed Image Photometry in Python)[2].</li>
+          <li>Image subtraction using the LSST pipeline (v19).</li>
+        </ul>
+    
+        <header><h3>Satellites</h3></header>
+
+        <ul>
+          <li>Satellites increasingly pose a significant problem as seen in Figure 1.</li>
+          <li>They obscure objects of interest, particularly faint ones, and can affect the overall quality of the observations.</li>
+          <li>These bright streaks are not easy to remove as they vary in brightness along their length.</li>
+          <li>The technique used here isolates the pixels in the bright streak, which are then used to mask them.</li>
+        </ul>
+      </article>
+
+    <article>
+      <figure style="text-align: center;margin-top:15%;">
+        <img src="mask_satellites.png" alt="A composite image which with visible satellite streaks, which are then masked.">
+        <figcaption>Figure 1: Bright satellite streaks prominently bisect the observations (a) and can obscure small tracklets, like those of TNOs. They have been masked (b) to improve the composition of the stacked observation.</figcaption>
+      </figure>
+    </article>
+
+
+    <article>
+      <header><h3>Methodology</h3></header>
+
+      <p>The methodology applied was adapted from [3]. The workflow for preparing the data is as follows:</p>
+      <ul>
+        <li>Build composite image stacks of nightly observations; one stack per chip per pointing.</li>
+        <li>Split each stack into 128 x 128 images:
+          <ul>
+            <li>629 tiles per image -> 25,160 per night -> 75,480 for 3 nights of observations</li>
+          </ul>
+        </li>
+        <li>Review all images and separate those with and without tracklets.
+          <ul>
+            <li>6979 with tracklets and 68,501 without</li>
+          </ul>
+        </li>
+        <li>Tracklet images: random 85:15 split into training and test set, no overlaps. </li>
+        <li>Training data augmented x 5, test data augmented x 2</li>
+        <li>No tracklet images: chose random 80%, then random 80:20 split into training and test set. No overlaps, no augmentation.</li>
+      </ul>
+
+        <figure style="text-align: center;margin-top:2%;">
+          <img src="classy_tracklets.png" alt="Tracklets of Solar System objects seen in CLASSY">
+          <figcaption>Figure 2: Tracklets of some of the new objects seen in the 3 nights of CLASSY pointings. More than 800 tracklets of objects that are not TNOs have been captured in these observations, many of which are not known to the MPC either. The decision was made to initially train the neural networks to find tracklets of any object with a distinctive tracklet moving in the field of view.</figcaption>
+        </figure>
+    </article>
+  
+
+    <article>
+      <figure style="text-align: center;margin-top:1%;">
+        <img src="neural_net.png" style="width: 150%" alt="Neural nerwork ensemble for classifying traclets">
+        <figcaption>Figure 3: The neural network ensemble trained for identifying images with tracklets. Each network makes a prediction about the input image and the highest value prediction is selected as the winner.</figcaption>
+      </figure>
+
+      <p>The major consideration for selecting neural network architectures was to <strong>avoid overfitting</strong>. 
+        Composition of the images means that there are many irrelevant abstractions and we want to <strong>focus the learning on the tracklet pattern</strong>. 
+        The chosen architectures are relatively small with <strong>fewer trainable parameters</strong> and with an <strong>aggressive dropout</strong> to further curtail overfitting. 
+        A novel "<strong>hybrid module</strong>" (Figure 4) was introduced, which was proven to boost performance. 
+        These models were pretrained to find asteroid tracklets in microlensing data[3] and had demonstrated that they generalized well to unseen data. 
+        They were <strong>fine tuned for 20-30 epochs with the purpose-built CLASSY dataset</strong> on a machine with a single GPU, with each network taking no longer than an hour to retrain. 
+        As each network learns a different mapping from input to output, <strong>ensemling</strong> them achieves a better result than from the individual models. 
+        Here, each neural network classifies an image and the <strong>highest value prediction</strong> is chosen.
+      </p>
+    </article>
+
+    <article>
+      <figure style="text-align: center;margin-top:5%;">
+        <img src="hybrid_module.png" style="width: 70%" alt="Custom hybrid module developed to identify tracklets.">
+        <figcaption>Figure 4: The hybrid module used by 3 of the models in the ensemble is composed of multi-scale filters like the Inception architecture and skip connections like the ResNet architecture. The multiple 1x1 convolutions increase the complexity of the data and thus improve the performance.</figcaption>
+      </figure>
+    </article>
+
+    <article>
+      <header><h3>Results</h3></header>
+
+      <p>
+
+        <figure style="text-align: center;">
+          <img src="ensemble_cf.jpg" style="width: 70%" alt="Confusion matrix charecterizing how well the ensemble identified tracklets.">
+          <figcaption>Figure 5: The confusion matrix that helps us visualize the classification performed by the ensemble. Evaluation metrics are derived from these values. Images with probabilities over 0.5 are classified as having tracklets.</figcaption>
+        </figure>
+
+        The salient performance metric here is recall, which tells us how many of the tracklet images the network classified correctly. 
+        This relates to the "False Negative" - misclassified tracklet images - in the confusion matrix, a value we want to minimize. 
+        The evaluation metrics are:
+        <ul>
+          <li><strong>Recall: 98.15%</strong></li> 
+          <li>Precision: 68.13%</li> 
+          <li>F2 Score: 90.20%</li> 
+        </ul>
+        Precision tells us how many of the images classified as tracklets were correct. The lower value here indicates the number of false positives. The F2 Score is the weighted mean of the recall and precision, which is further weighted to favour recall. 
+      </p>
+      
+    </article>
+
+
+    <article>
+
+      <figure style="text-align: center;margin-top:5%;">
+        <img src="ensemble_auc.jpg" style="width: 70%" alt="Area under the receiver operating characteristic curve for the ensemble.">
+        <figcaption>Figure 6: The receiver operating characteristic (ROC) curve shows us the tradeoff between how sensitive the model is to finding tracklets (true positive rate) and how often it raises a false alarm (false positive rate). The area under the curve (ROC AUC) is 98.80%. Images with probabilities over 0.5 are classified as having tracklets.</figcaption>
+      </figure>
+
+      <figure style="text-align: center;margin-top:5%;">
+        <img src="ensemble_pr.jpg" style="width: 70%" alt="Area under the precision-recall curve for the ensemble.">
+        <figcaption>Figure 7: The precision-recall curve that shows the tradeoff between precision and recall at different probability thresholds. The area under the precision recall curve (PR AUC) is 96.74%.</figcaption>
+      </figure>
+
+    </article>
+
+    <article>
+      <header><h3>Discussion</h3></header>
+      <ul>
+        <li>This initial phase has shown that <strong>it is possible</strong> to re-train neural network architectures to identify tracklets of moving objects in the CLASSY observations.</li>
+        <li>A review of the false negatives shows that it is the faintest tracklets that are missed. Further training with more labelled data will <strong>augment the numbers of faint tracklets</strong> with image processing techniques.</li>
+        <li>We are in the process of comparing these results against the PKGMOD [4] shift-and-stack output to investigate how the two processes can be <strong>to boost the results</strong>.</li>
+        <li>The tracklets can be <strong>filtered by length</strong>, which means the technique can be used for discovery or recovery of the myriad solar system objects closer to us than TNOs as well.
+          <li>Future work will involve investigating <strong>image clustering</strong>  techniques to group tracklets based on their foot print in the images.</li>
+        </li>
+        <li>Planted TNO sources will be invaluable to train deep learning-based object detectors like YOLO to localise TNOs.</li>
+        <li>Given that there are so many non-TNO solar system bodies in the data, their astrometry can be used to <strong>find potential matches</strong> in the Minor Planet Center's Isolated Tracklet file [5].</li>
+        <li>The tracklet buiding technique combined with the exceptional depth and clarity of the CLASSY observations make it ideal for <strong>centaur discovery</strong>. These illusive bodies orbit the vast region between Jupiter and Neptune and can be overlooked because of their varying orbital speed.</li>
+      </ul>
+    
+     
+    </article> 
+    <article>
+      <header><h3>References</h3></header>
+      <ol>
+        <li>Gwyn S D. <a href="https://ui.adsabs.harvard.edu/abs/2008PASP..120..212G/abstract">MegaPipe: the MegaCam image stacking pipeline at the Canadian astronomical data centre.</a> <i>Publications of the Astronomical Society of the Pacific</i>  <strong>120</strong> 212 (2008)</li>
+        <li>Fraser, W. C. et al. <a href="http://ui.adsabs.harvard.edu/abs/2016ascl.soft05010F/abstract">Trailed Image Photometry in Python.</a> <i>The Astronomical Journal</i> <strong>151</strong> 158 (2016)</li>
+        <li>Cowan, P. et al. <a href="https://www.sciencedirect.com/science/article/pii/S2213133723000082">Asteroid Detection in Microlensing Surveys with Deep Learning.</a> <i>Astronomy and Computing</i> <strong>42</strong> (2023)</li>
+        <li>Predictive Clustering Kernel-Based Moving Object Detection: <a href="https://github.com/fraserw/pkbmod">github.com/fraserw/pkbmod</a></li>
+        <li><a href="https://www.minorplanetcenter.net/mpcops/documentation/identifications/additional/">Minor Planet Center Isolated Tracklets</a></li>
+      </ol>
+
+      <header><h3>CLASSY Collaboration</h3></header>
+      PIs: Wesley Fraser and Samantha Lawler
+      <i>Edward Ashton, Michele Bannister, Laura Buchana, Chang-Kao Chang, Ying-Tung Chen, Andrew Connolly, Preeti Cowan, Brett Gladman, Stephen Gwyn, Yukun Huang, JJ Kavelaars, Christa Van Laerhoven, Benoit Noyelles, Justine Obidowski, Jack Patterson, Lowell Peltier, Rosemary Pike, Nicole Tan, Kat Volk, Shiang-Yu Wang</i>
+    </article>
+
+
+  </main>
+
+    <footer>
+      <address class="monospace"> 
+      </address>
+      <address class="monospace">  preeti.cowan@auckland.ac.nz
+      </address>
+        <span class="credits">
+        </span>
+    </footer>
+  </body>
+</html>
